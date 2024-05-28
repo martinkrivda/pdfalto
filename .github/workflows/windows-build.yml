@@ -10,11 +10,6 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-
       - name: Install Chocolatey
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force; `
@@ -29,10 +24,6 @@ jobs:
           choco install cygwin -y
           choco install cyg-get -y
           cyg-get gcc-g++ make
-
-      - name: Initialize and update git submodules
-        run: |
-          git submodule update --init --recursive
 
       - name: Set up Visual Studio environment
         shell: cmd
@@ -52,6 +43,15 @@ jobs:
           gcc -v
           g++ -v
 
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Initialize and update git submodules
+        run: |
+          git submodule update --init --recursive
+
       - name: Configure the build with CMake
         shell: bash
         run: |
@@ -62,7 +62,7 @@ jobs:
           echo "Current directory: $(pwd)"
           cd build
           SRC_DIR=$(cygpath -u "${GITHUB_WORKSPACE}")
-          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX $SRC_DIR
+          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX ..
 
       - name: Build the project
         shell: bash
