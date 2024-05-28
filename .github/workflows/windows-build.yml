@@ -1,0 +1,52 @@
+name: Build pdfalto on Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Chocolatey
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install dependencies
+        run: |
+          choco install git -y
+          choco install cmake -y
+          choco install visualstudio2019buildtools -y
+          choco install cygwin -y
+          choco install cyg-get -y
+          cyg-get gcc-g++ make
+
+      - name: Initialize and update git submodules
+        run: |
+          git submodule update --init --recursive
+
+      - name: Set up Visual Studio environment
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+
+      - name: Configure the build with CMake
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DBOOST_ROOT=/usr/local/boost ..
+
+      - name: Build the project
+        run: |
+          cd build
+          make
