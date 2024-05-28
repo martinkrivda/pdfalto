@@ -54,6 +54,8 @@ jobs:
 
       - name: Configure the build with CMake
         shell: bash
+        env:
+          SRC_DIR: ${{ github.workspace }}
         run: |
           export PATH="/cygdrive/c/cygwin64/bin:$PATH"
           export CC=/cygdrive/c/cygwin64/bin/gcc
@@ -61,7 +63,7 @@ jobs:
           mkdir -p build
           echo "Current directory: $(pwd)"
           cd build
-          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX /cygdrive/d/a/pdfalto/pdfalto
+          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX $SRC_DIR
 
       - name: Build the project
         shell: bash
