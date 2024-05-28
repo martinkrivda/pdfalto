@@ -54,7 +54,5 @@ jobs:
         shell: bash
         run: |
           export PATH="/cygdrive/c/cygwin64/bin:$PATH"
-          export CC="/cygdrive/c/cygwin64/bin/gcc"
-          export CXX="/cygdrive/c/cygwin64/bin/g++"
           cd build
           make
