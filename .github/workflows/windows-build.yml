@@ -46,6 +46,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
+          clean: false
           submodules: true
 
       - name: Initialize and update git submodules
