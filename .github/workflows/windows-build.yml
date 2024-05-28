@@ -1,60 +1,70 @@
-# This workflow builds pdfalto for Windows server using Cygwin
+name: Build pdfalto on Windows
 
-name: Build pdfalto (Windows)
-
-runs-on: windows-latest
-
-env:
-  CYGWIN_ROOT: /cygdrive/c/cygwin64
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: C:\cygwin\bin\bash.exe --login -o igncr {0}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install Cygwin and dependencies (using runners with Cygwin pre-installed)
-        run: |
-          # Consider using a runner with Cygwin pre-installed for efficiency
-          # If Cygwin is not pre-installed, uncomment and customize these lines:
-          # choco install git cygwin cyg-get -y
-          # cyg-get install make gcc-g++ autoconf libtool libxml2-devel automake zlib-devel
-
-      - name: Setup Cygwin environment (assuming Cygwin is pre-installed)
-        # Adjust paths if Cygwin is installed in a different location
-        run: |
-          set PATH=$CYGWIN_ROOT/bin:$PATH
-          export CC=/cygwin/bin/gcc
-          export CXX=/cygwin/bin/g++
-
-      - name: Clone pdfalto repository
-        run: |
-          git clone https://github.com/kermitt2/pdfalto.git
-
-      - name: Navigate to pdfalto directory
-        run: |
-          cd pdfalto
-
-      - name: Download Xpdf submodule (using SSH key for security)
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
-          repository: https://github.com/jdhieux/xpdf
-          subdirectory: xpdf-4.03
-          fetch-depth: 1
-          # Consider using a pre-generated SSH key stored as a GitHub Secret
-          # for secure authentication:
-          # env:
-          #   GIT_SSH_COMMAND: 'ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }}'
+          submodules: true
 
-      - name: Build pdfalto
+      - name: Install Chocolatey
         run: |
-          sh ./autogen.sh  # Run if present
-          ./configure
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install dependencies
+        run: |
+          choco install git -y
+          choco install cmake -y
+          choco install visualstudio2019buildtools -y
+          choco install cygwin -y
+          choco install cyg-get -y
+          cyg-get gcc-g++ make
+
+      - name: Initialize and update git submodules
+        run: |
+          git submodule update --init --recursive
+
+      - name: Set up Visual Studio environment
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+
+      - name: "Setup Cygwin"
+        uses: cygwin/cygwin-install-action@v2
+        with:
+          check-sig: false
+          platform: x86_64
+          packages: automake make cmake gcc-g++ doxygen graphviz libssl-devel libuuid-devel
+
+      - name: "Setup cmake"
+        run: cmake --version
+
+      - name: Configure the build with CMake
+        shell: bash
+        run: |
+          export PATH="/cygdrive/c/cygwin64/bin:$PATH"
+          export CC=/cygdrive/c/cygwin64/bin/gcc
+          export CXX=/cygdrive/c/cygwin64/bin/g++
+          mkdir build
+          cd build
+          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX ..
+
+      - name: Build the project
+        shell: bash
+        run: |
+          export PATH="/cygdrive/c/cygwin64/bin:$PATH"
+          cd build
           make
-
-      - name: Upload artifacts (optional)
-        uses: actions/upload-artifact@v3
-        with:
-          name: pdfalto-windows
-          path: ./build/pdfalto.exe
