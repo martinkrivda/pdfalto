@@ -29,28 +29,32 @@ jobs:
           choco install visualstudio2019buildtools -y
           choco install cygwin -y
           choco install cyg-get -y
-          cyg-get install gcc-g++ make
-
-      - name: Set up Cygwin environment
-        shell: bash
-        run: |
-          export PATH="/cygdrive/c/cygwin64/bin:$PATH"
+          cyg-get gcc-g++ make
 
       - name: Initialize and update git submodules
         run: |
           git submodule update --init --recursive
 
+      - name: Set up Visual Studio environment
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+
       - name: Configure the build with CMake
         shell: bash
         run: |
           export PATH="/cygdrive/c/cygwin64/bin:$PATH"
+          export CC="/cygdrive/c/cygwin64/bin/gcc"
+          export CXX="/cygdrive/c/cygwin64/bin/g++"
           mkdir build
           cd build
-          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ ..
+          cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" ..
 
       - name: Build the project
         shell: bash
         run: |
           export PATH="/cygdrive/c/cygwin64/bin:$PATH"
+          export CC="/cygdrive/c/cygwin64/bin/gcc"
+          export CXX="/cygdrive/c/cygwin64/bin/g++"
           cd build
           make
