@@ -52,9 +52,9 @@ jobs:
       - name: Configure the build with CMake
         shell: bash
         run: |
-          export PATH="C:/cygdrive/c/cygwin64/bin:$PATH"
-          export CC=C:/cygdrive/c/cygwin64/bin/gcc
-          export CXX=C:/cygdrive/c/cygwin64/bin/g++
+          export PATH="/cygdrive/c/cygwin64/bin:$PATH"
+          export CC=/cygdrive/c/cygwin64/bin/gcc
+          export CXX=/cygdrive/c/cygwin64/bin/g++
           mkdir -p build
           cd build
           cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX ..
