@@ -15,7 +15,6 @@ jobs:
           Set-ExecutionPolicy Bypass -Scope Process -Force; `
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
           iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
       - name: Install dependencies
         run: |
           choco install git -y
@@ -24,12 +23,10 @@ jobs:
           choco install cygwin -y
           choco install cyg-get -y
           cyg-get gcc-g++ make
-
       - name: Set up Visual Studio environment
         shell: cmd
         run: |
           "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
-
       - name: "Setup Cygwin"
         uses: cygwin/cygwin-install-action@v2
         with:
@@ -42,17 +39,17 @@ jobs:
           cmake --version
           gcc -v
           g++ -v
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           clean: false
           submodules: true
+        run: |
+          echo "Current directory: $(pwd)"
 
       - name: Initialize and update git submodules
         run: |
           git submodule update --init --recursive
-
       - name: Configure the build with CMake
         shell: bash
         run: |
@@ -60,11 +57,11 @@ jobs:
           export CC=/cygdrive/c/cygwin64/bin/gcc
           export CXX=/cygdrive/c/cygwin64/bin/g++
           mkdir -p build
+          echo "Directory content: $(ls)""
           echo "Current directory: $(pwd)"
           cd build
           SRC_DIR=$(cygpath -u "${GITHUB_WORKSPACE}")
           cmake -G "Unix Makefiles" -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX ..
-
       - name: Build the project
         shell: bash
         run: |
